@@ -1,22 +1,24 @@
-name: Release a new version
+name: Release model-service
+
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  build-and-publish:
+    runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Parse version info from tag
-      run: |
-        # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
-        VERSION=${GITHUB_REF:11}
-        MAJOR=$(echo "$VERSION" | cut -d . -f 1)
-        MINOR=$(echo "$VERSION" | cut -d . -f 2)
-        PATCH=$(echo "$VERSION" | cut -d . -f 3)
-        echo "version=$VERSION" >> $GITHUB_ENV
-        echo "version_major=$MAJOR" >> $GITHUB_ENV
-        echo "version_minor=$MINOR" >> $GITHUB_ENV
-        echo "version_patch=$PATCH" >> $GITHUB_ENV
-        .
-        docker push --all-tags $IMG
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt

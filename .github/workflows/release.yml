@@ -39,3 +39,17 @@ jobs:
           echo "version_major=$MAJOR" >> $GITHUB_ENV
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
+
+#      - name: Set up Docker Buildx
+#        run: |
+#          docker buildx create --use
+#
+#      - name: Log in to GitHub Container Registry
+#        run: |
+#          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#
+#      - name: Build and push multi-arch Docker image
+#        run: |
+#          docker buildx build --platform linux/arm64/v8,linux/amd64 \
+#            --tag ghcr.io/remla25-team12/<IMAGENAME>:${{ env.version }} \
+#            --push .

@@ -6,10 +6,9 @@ import os
 
 from libml.text_preprocessing import  preprocess_input
 
+MODEL_URL = os.getenv("MODEL_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/Classifier_Sentiment_Model.joblib")
+VEC_URL = os.getenv("VEC_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/c1_BoW_Sentiment_Model.pkl")
 
-# MODEL_URL = os.getenv("MODEL_URL", "http://localhost:5000")
-MODEL_URL = "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/Classifier_Sentiment_Model.joblib"
-VEC_URL = "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/c1_BoW_Sentiment_Model.pkl"
 app = Flask(__name__)
 model = None
 

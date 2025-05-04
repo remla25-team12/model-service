@@ -51,5 +51,5 @@ jobs:
       - name: Build and push multi-arch Docker image
         run: |
           docker buildx build --platform linux/arm64/v8,linux/amd64 \
-            --tag ghcr.io/remla25-team12/<IMAGENAME>:${{ env.version }} \
+            --tag ghcr.io/remla25-team12/model-service:${{ env.version }} \
             --push .

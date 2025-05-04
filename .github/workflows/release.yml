@@ -51,7 +51,7 @@ jobs:
             - Minor version: ${{ env.version_minor }}
             - Patch version: ${{ env.version_patch }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Set up Docker Buildx
         run: |

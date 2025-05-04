@@ -40,18 +40,7 @@ jobs:
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
 
-      - name: Create release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ env.version }}
-          body: |
-            ## Changes in this release:
-            - Major version: ${{ env.version_major }}
-            - Minor version: ${{ env.version_minor }}
-            - Patch version: ${{ env.version_patch }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
 
       - name: Set up Docker Buildx
         run: |
@@ -66,4 +55,12 @@ jobs:
           docker buildx build --platform linux/arm64/v8,linux/amd64 \
             --tag ghcr.io/remla25-team12/model-service:${{ env.version }} \
             --push .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 

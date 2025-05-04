@@ -45,7 +45,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.version }}
-          release_name: Release ${{ env.version }}
           body: |
             ## Changes in this release:
             - Major version: ${{ env.version_major }}

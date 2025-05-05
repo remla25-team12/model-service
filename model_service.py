@@ -12,9 +12,10 @@ MODEL_URL = "https://github.com/remla25-team12/model-training/releases/download/
 VEC_URL = "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/c1_BoW_Sentiment_Model.pkl"
 app = Flask(__name__)
 model = None
+new_data = []
 
 def load_model():
-    global model, cv
+    global model, cv, new_data
     model_path = "Classifier_Sentiment_Model.joblib"
     vec_path = "c1_BoW_Sentiment_Model.pkl"
 
@@ -59,6 +60,24 @@ def predict():
     prediction = model.predict(processed_text)
     print("Prediction complete: ", str(prediction[0]))
     return jsonify({"prediction": str(prediction[0])}), 200
+
+@app.route('/new_data', methods=['POST'])
+def new_data_save():
+    data = request.get_json()
+    if not data or 'text' not in data or 'sentiment' not in data:
+        return jsonify({"error": "Input is invalid"}), 400
+    text = data['text']
+    sentiment = data['sentiment']
+    if not isinstance(sentiment, int):
+        return jsonify({"error": "Sentiment must be an integer"}), 400
+    if sentiment not in [0, 1]:
+        return jsonify({"error": "Sentiment must be 0 or 1"}), 400
+    if not isinstance(text, str):
+        return jsonify({"error": "Text must be a string"}), 400
+    if len(text) < 1:
+        return jsonify({"error": "Text must be at least 1 character long"}), 400
+    new_data.append({"text": text, "sentiment": sentiment})
+    return jsonify({"message": "Data added successfully"}), 200
 
 if __name__ == "__main__":
     load_model()

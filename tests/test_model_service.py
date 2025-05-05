@@ -30,3 +30,17 @@ def test_predict_invalid_input(client):
     assert response.status_code == 400
     data = json.loads(response.data)
     assert data["error"] == "Input is invalid"
+
+def test_new_data_valid_input(client):
+    # Test the /new_data endpoint with valid input
+    response = client.post('/new_data', json={"text": "This is a test", "sentiment": 1})
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert data["message"] == "Data added successfully"
+
+def test_new_data_invalid_input(client):
+    # Test the /new_data endpoint with missing fields
+    response = client.post('/new_data', json={"text": "This is a test"})
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert data["error"] == "Input is invalid"

@@ -11,9 +11,13 @@ VEC_URL = os.getenv("VEC_URL", "https://github.com/remla25-team12/model-training
 
 app = Flask(__name__)
 model = None
+new_data = []
 
 def load_model():
-    global model, cv
+    """
+    Loads the model and vectorizer from the specified URLs if they do not exist locally.
+    """
+    global model, cv, new_data
     model_path = "Classifier_Sentiment_Model.joblib"
     vec_path = "c1_BoW_Sentiment_Model.pkl"
 
@@ -47,6 +51,16 @@ def load_model():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Handles POST requests to the /predict endpoint.
+    This method validates the input JSON payload to ensure it contains the required field:
+    - 'text': A non-empty string representing the text data.
+    If the input is valid, the text is preprocessed and passed to the model for prediction.
+    Otherwise, an appropriate error message is returned.
+    Returns:
+        - 200: If the prediction is successful, with the prediction result.
+        - 400: If the input is invalid, with an error message explaining the issue.
+    """
     data = request.get_json()
     if not data or 'text' not in data:
         return jsonify({"error": "Input is invalid"}), 400
@@ -58,6 +72,39 @@ def predict():
     prediction = model.predict(processed_text)
     print("Prediction complete: ", str(prediction[0]))
     return jsonify({"prediction": str(prediction[0])}), 200
+
+
+@app.route('/new_data', methods=['POST'])
+def new_data_save():
+    """
+    Handles POST requests to the /new_data endpoint.
+
+    This method validates the input JSON payload to ensure it contains the required fields:
+    - 'text': A non-empty string representing the text data.
+    - 'sentiment': An integer (0 or 1) representing the sentiment.
+
+    If the input is valid, the data is appended to the global `new_data` list.
+    Otherwise, an appropriate error message is returned.
+
+    Returns:
+        - 200: If the data is successfully added.
+        - 400: If the input is invalid, with an error message explaining the issue.
+    """
+    data = request.get_json()
+    if not data or 'text' not in data or 'sentiment' not in data:
+        return jsonify({"error": "Input is invalid"}), 400
+    text = data['text']
+    sentiment = data['sentiment']
+    if not isinstance(sentiment, int):
+        return jsonify({"error": "Sentiment must be an integer"}), 400
+    if sentiment not in [0, 1]:
+        return jsonify({"error": "Sentiment must be 0 or 1"}), 400
+    if not isinstance(text, str):
+        return jsonify({"error": "Text must be a string"}), 400
+    if len(text) < 1:
+        return jsonify({"error": "Text must be at least 1 character long"}), 400
+    new_data.append({"text": text, "sentiment": sentiment})
+    return jsonify({"message": "Data added successfully"}), 200
 
 if __name__ == "__main__":
     load_model()

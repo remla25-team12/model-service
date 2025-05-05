@@ -15,4 +15,3 @@ It loads the model from a versioned release and uses the `lib-ml` for preprocess
    python -m pip install --upgrade pip
    pip install -r requirements.txt
    ```
-## 

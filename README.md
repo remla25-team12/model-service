@@ -7,11 +7,11 @@ It loads the model from a versioned release and uses the `lib-ml` for preprocess
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/<your-repo>/model-service.git
+   git clone https://github.com/remla25-team12/model-service.git
    cd model-service
-    ```
+   ```
 2. Install dependencies:
-    ```bash
+   ```bash
    python -m pip install --upgrade pip
    pip install -r requirements.txt
    ```

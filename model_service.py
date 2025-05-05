@@ -15,6 +15,9 @@ model = None
 new_data = []
 
 def load_model():
+    """
+    Loads the model and vectorizer from the specified URLs if they do not exist locally.
+    """
     global model, cv, new_data
     model_path = "Classifier_Sentiment_Model.joblib"
     vec_path = "c1_BoW_Sentiment_Model.pkl"
@@ -49,6 +52,16 @@ def load_model():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    """
+    Handles POST requests to the /predict endpoint.
+    This method validates the input JSON payload to ensure it contains the required field:
+    - 'text': A non-empty string representing the text data.
+    If the input is valid, the text is preprocessed and passed to the model for prediction.
+    Otherwise, an appropriate error message is returned.
+    Returns:
+        - 200: If the prediction is successful, with the prediction result.
+        - 400: If the input is invalid, with an error message explaining the issue.
+    """
     data = request.get_json()
     if not data or 'text' not in data:
         return jsonify({"error": "Input is invalid"}), 400
@@ -61,8 +74,23 @@ def predict():
     print("Prediction complete: ", str(prediction[0]))
     return jsonify({"prediction": str(prediction[0])}), 200
 
+
 @app.route('/new_data', methods=['POST'])
 def new_data_save():
+    """
+    Handles POST requests to the /new_data endpoint.
+
+    This method validates the input JSON payload to ensure it contains the required fields:
+    - 'text': A non-empty string representing the text data.
+    - 'sentiment': An integer (0 or 1) representing the sentiment.
+
+    If the input is valid, the data is appended to the global `new_data` list.
+    Otherwise, an appropriate error message is returned.
+
+    Returns:
+        - 200: If the data is successfully added.
+        - 400: If the input is invalid, with an error message explaining the issue.
+    """
     data = request.get_json()
     if not data or 'text' not in data or 'sentiment' not in data:
         return jsonify({"error": "Input is invalid"}), 400

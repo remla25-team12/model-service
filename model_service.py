@@ -3,11 +3,16 @@ import joblib
 import pickle
 import requests
 import os
+import csv
 
 from libml.text_preprocessing import  preprocess_input
+from libml import __version__ as lib_ml_version
 
+CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./cache")
 MODEL_URL = os.getenv("MODEL_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/Classifier_Sentiment_Model.joblib")
 VEC_URL = os.getenv("VEC_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/c1_BoW_Sentiment_Model.pkl")
+FEEDBACK_FILE_PATH = os.getenv("FEEDBACK_FILE_PATH","./feedback/feedback_dump.tsv")
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 app = Flask(__name__)
 model = None
@@ -18,8 +23,8 @@ def load_model():
     Loads the model and vectorizer from the specified URLs if they do not exist locally.
     """
     global model, cv, new_data
-    model_path = "Classifier_Sentiment_Model.joblib"
-    vec_path = "c1_BoW_Sentiment_Model.pkl"
+    model_path = os.path.join(CACHE_DIR, "Classifier_Sentiment_Model.joblib")
+    vec_path = os.path.join(CACHE_DIR, "c1_BoW_Sentiment_Model.pkl")
 
     # get model if non existent
     if not os.path.exists(model_path):
@@ -48,6 +53,27 @@ def load_model():
     with open(vec_path, "rb") as f:
         cv = pickle.load(f)
     print("Model and vectorizer loaded successfully.")
+
+@app.route('/version', methods=['GET'])
+def version():
+    """
+    Get the current version of lib-ml
+    ---
+    summary: Get library version
+    responses:
+      200:
+        description: Successfully returns version
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                  example: "1.2.3"
+    """
+    return jsonify({"version": lib_ml_version})
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -103,7 +129,23 @@ def new_data_save():
         return jsonify({"error": "Text must be a string"}), 400
     if len(text) < 1:
         return jsonify({"error": "Text must be at least 1 character long"}), 400
+
     new_data.append({"text": text, "sentiment": sentiment})
+    print(f"[NEW DATA] {text} -> {sentiment}")
+
+    # Append to .tsv file
+    try:
+        os.makedirs(os.path.dirname(FEEDBACK_FILE_PATH), exist_ok=True)
+        file_exists = os.path.isfile(FEEDBACK_FILE_PATH)
+        with open(FEEDBACK_FILE_PATH, mode='a', newline='', encoding='utf-8') as tsvfile:
+            writer = csv.writer(tsvfile, delimiter='\t')
+            if not file_exists:
+                writer.writerow(["Review", "Liked"])
+            writer.writerow([text.strip(), sentiment])
+    except Exception as e:
+        print(f"❌ Error writing to feedback file: {e}")
+        return jsonify({"error": f"Failed to write to TSV: {str(e)}"}), 500
+
     return jsonify({"message": "Data added successfully"}), 200
 
 if __name__ == "__main__":

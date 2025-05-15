@@ -54,6 +54,7 @@ jobs:
         run: |
           docker buildx build --platform linux/arm64/v8,linux/amd64 \
             --tag ghcr.io/remla25-team12/model-service:${{ env.version }} \
+            --tag ghcr.io/remla25-team12/model-service:latest \
             --push .
 
       - name: Create GitHub Release

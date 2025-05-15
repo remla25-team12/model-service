@@ -1,5 +1,7 @@
 # Stage 1: Build dependencies
 FROM python:3.12.9-slim as builder
+LABEL org.opencontainers.image.source="https://github.com/remla25-team12/model-service"
+
 RUN apt-get update && apt-get install -y git && apt-get clean
 WORKDIR /app
 COPY requirements.txt .

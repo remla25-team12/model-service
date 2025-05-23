@@ -1,7 +1,7 @@
 joblib~=1.4.2
 requests~=2.32.3
 Flask>=2.2.3
-libml @ git+https://github.com/remla25-team12/lib-ml@v0.1.5
-pytest
+libml @ git+https://github.com/remla25-team12/lib-ml.git@v0.1.5
+pytest~=8.3.5
 setuptools>=64
 setuptools_scm>=8

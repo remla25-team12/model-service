@@ -4,19 +4,15 @@ import pickle
 import requests
 import os
 import csv
-from dotenv import load_dotenv
 
 from libml.text_preprocessing import  preprocess_input
 from libml import __version__ as lib_ml_version
 
-# Load the environment variables
-load_dotenv()
-
-MODEL_VERSION = os.getenv("MODEL_VERSION", "v0.1.2")
-
 CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./cache")
-MODEL_URL = os.getenv("MODEL_URL", f"https://github.com/remla25-team12/model-training/releases/download/{MODEL_VERSION}/Classifier_Sentiment_Model.joblib")
-VEC_URL = os.getenv("VEC_URL", f"https://github.com/remla25-team12/model-training/releases/download/{MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl")
+TRAINED_MODEL_VERSION = os.getenv("TRAINED_MODEL_VERSION", "v0.1.2")
+
+MODEL_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl"
+VEC_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl"
 FEEDBACK_FILE_PATH = os.getenv("FEEDBACK_FILE_PATH","./feedback/feedback_dump.tsv")
 os.makedirs(CACHE_DIR, exist_ok=True)
 

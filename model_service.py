@@ -9,9 +9,9 @@ from libml.text_preprocessing import  preprocess_input
 from libml import __version__ as lib_ml_version
 
 CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./cache")
-TRAINED_MODEL_VERSION = os.getenv("TRAINED_MODEL_VERSION", "v0.1.2")
+TRAINED_MODEL_VERSION = os.getenv("TRAINED_MODEL_VERSION", "v0.1.0")
 
-MODEL_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl"
+MODEL_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/Classifier_Sentiment_Model.joblib"
 VEC_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl"
 FEEDBACK_FILE_PATH = os.getenv("FEEDBACK_FILE_PATH","./feedback/feedback_dump.tsv")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -26,7 +26,7 @@ def load_model():
     """
     global model, cv, new_data
 
-    versioned_cache_dir = os.path.join(CACHE_DIR, MODEL_VERSION)
+    versioned_cache_dir = os.path.join(CACHE_DIR, TRAINED_MODEL_VERSION)
     os.makedirs(versioned_cache_dir, exist_ok=True)
 
     model_path = os.path.join(versioned_cache_dir, "Classifier_Sentiment_Model.joblib")

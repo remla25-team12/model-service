@@ -67,6 +67,7 @@ def version():
     """
     Get library version from lib-ml
     ---
+    summary: Get library version
     parameters: []
     responses:
       200:
@@ -80,6 +81,7 @@ def predict():
     """
     Predict sentiment from input text
     ---
+    summary: Predict sentiment
     parameters:
     - in: body
         name: body
@@ -115,6 +117,7 @@ def new_data_save():
     """
     Submit new data for feedback
     ---
+    summary: Submit new data
     parameters:
       - in: body
         name: body

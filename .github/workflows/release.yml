@@ -1,9 +1,9 @@
 name: Release model-service
 
-on:
-  push:
-    branches:
-      - pre-release
+# on:
+#   push:
+#     branches:
+#       - pre-release
 
 jobs:
   build-and-publish:

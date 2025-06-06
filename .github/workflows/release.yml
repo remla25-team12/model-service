@@ -8,7 +8,8 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
+    outputs:
+      version: ${{ steps.parse-version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,7 +17,7 @@ jobs:
       - name: Set up python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -26,29 +27,25 @@ jobs:
       - name: Run tests
         run: |
           pytest --maxfail=5 --disable-warnings
-        
 
       - name: Parse version info from tag
+        id: parse-version
         run: |
-          # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
           VERSION=${GITHUB_REF:11}
           MAJOR=$(echo "$VERSION" | cut -d . -f 1)
           MINOR=$(echo "$VERSION" | cut -d . -f 2)
           PATCH=$(echo "$VERSION" | cut -d . -f 3)
           echo "version=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_major=$MAJOR" >> $GITHUB_ENV
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
 
-
-
       - name: Set up Docker Buildx
-        run: |
-          docker buildx create --use
+        run: docker buildx create --use
 
       - name: Log in to GitHub Container Registry
-        run: |
-          echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and push multi-arch Docker image
         run: |
@@ -61,7 +58,36 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  bump-version-on-main:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Compute next pre-release version
+        run: |
+          VERSION=${{ needs.build-and-publish.outputs.version }}
+          echo "Current released version: $VERSION"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          PATCH=$((PATCH + 1))
+          NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-pre"
+          echo "$NEXT_VERSION" > VERSION
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_ENV
+
+      - name: Commit and push new pre-release version
+        run: |
+          git add VERSION
+          git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.build-and-publish.outputs.version }}"
+          git push origin main

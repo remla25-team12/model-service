@@ -2,8 +2,8 @@ name: Release model-service
 
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - pre-release
 
 jobs:
   build-and-publish:
@@ -62,13 +62,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   bump-version-on-main:
-    needs: build-and-publish
+    #needs: build-and-publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: pre-release
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Configure Git
@@ -78,7 +78,7 @@ jobs:
 
       - name: Compute next timestamped pre-release version
         run: |
-          VERSION=${{ needs.build-and-publish.outputs.version }}
+          VERSION=$(grep -oP '(?<=__version__ = ")[^"]+' version.py)
           echo "Current released version: $VERSION"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           PATCH=$((PATCH + 1))
@@ -94,4 +94,4 @@ jobs:
         run: |
           git add version.py
           git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.build-and-publish.outputs.version }}"
-          git push origin main
+          git push origin pre-release

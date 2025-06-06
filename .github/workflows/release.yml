@@ -76,18 +76,22 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-      - name: Compute next pre-release version
+      - name: Compute next timestamped pre-release version
         run: |
           VERSION=${{ needs.build-and-publish.outputs.version }}
           echo "Current released version: $VERSION"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           PATCH=$((PATCH + 1))
-          NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-pre"
-          echo "$NEXT_VERSION" > VERSION
+          
+          # Generate timestamp suffix to support multiple versions of the same pre-release
+          TIMESTAMP=$(date -u +"%Y%m%d.%H%M")
+          
+          NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-pre.${TIMESTAMP}"
+          echo "__version__ = \"${NEXT_VERSION}\"" > version.py
           echo "next_version=$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Commit and push new pre-release version
         run: |
-          git add VERSION
+          git add version.py
           git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.build-and-publish.outputs.version }}"
           git push origin main

@@ -65,7 +65,8 @@ def load_model():
 @app.route('/version', methods=['GET'])
 def version():
     """
-    summary: Get library version from lib-ml
+    Get library version from lib-ml
+    ---
     parameters: []
     responses:
       200:
@@ -77,7 +78,8 @@ def version():
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    summary: Predict sentiment from input text
+    Predict sentiment from input text
+    ---
     parameters:
     - in: body
         name: body
@@ -90,9 +92,9 @@ def predict():
             text:
             type: string
     responses:
-    200:
+      200:
         description: Sentiment prediction result
-    400:
+      400:
         description: Invalid input
     """
     data = request.get_json()
@@ -111,7 +113,8 @@ def predict():
 @app.route('/new_data', methods=['POST'])
 def new_data_save():
     """
-    summary: Submit new data for feedback
+    Submit new data for feedback
+    ---
     parameters:
       - in: body
         name: body
@@ -161,12 +164,12 @@ def new_data_save():
                 writer.writerow(["Review", "Liked"])
             writer.writerow([text.strip(), sentiment])
     except Exception as e:
-        print(f"❌ Error writing to feedback file: {e}")
+        print(f"Error writing to feedback file: {e}")
         return jsonify({"error": f"Failed to write to TSV: {str(e)}"}), 500
 
     return jsonify({"message": "Data added successfully"}), 200
 
 if __name__ == "__main__":
     load_model()
-    port = int(os.getenv("MODEL_SERVICE_PORT", 5000))
+    port = int(os.getenv("MODEL_SERVICE_PORT", 5050))
     app.run(host="0.0.0.0", port=port)

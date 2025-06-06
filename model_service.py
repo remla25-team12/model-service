@@ -171,5 +171,5 @@ def new_data_save():
 
 if __name__ == "__main__":
     load_model()
-    port = int(os.getenv("MODEL_SERVICE_PORT", 5050))
+    port = int(os.getenv("MODEL_SERVICE_PORT", 5000))
     app.run(host="0.0.0.0", port=port)

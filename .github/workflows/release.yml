@@ -65,6 +65,14 @@ jobs:
     #needs: build-and-publish
     runs-on: ubuntu-latest
     steps:
+      - name: Skip if commit by GitHub Actions
+        run: |
+          echo "Triggered by: ${{ github.actor }}"
+          if [ "${{ github.actor }}" = "github-actions" ]; then
+            echo "Exiting to prevent loop."
+            exit 0
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

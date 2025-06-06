@@ -10,8 +10,10 @@ from libml.text_preprocessing import  preprocess_input
 from libml import __version__ as lib_ml_version
 
 CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./cache")
-MODEL_URL = os.getenv("MODEL_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/Classifier_Sentiment_Model.joblib")
-VEC_URL = os.getenv("VEC_URL", "https://github.com/remla25-team12/model-training/releases/download/v0.1.0/c1_BoW_Sentiment_Model.pkl")
+TRAINED_MODEL_VERSION = os.getenv("TRAINED_MODEL_VERSION", "v0.1.0")
+
+MODEL_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/Classifier_Sentiment_Model.joblib"
+VEC_URL = f"https://github.com/remla25-team12/model-training/releases/download/{TRAINED_MODEL_VERSION}/c1_BoW_Sentiment_Model.pkl"
 FEEDBACK_FILE_PATH = os.getenv("FEEDBACK_FILE_PATH","./feedback/feedback_dump.tsv")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
@@ -25,8 +27,12 @@ def load_model():
     Method for loading the model and vectorizer from the specified URLs if they do not exist locally.
     """
     global model, cv, new_data
-    model_path = os.path.join(CACHE_DIR, "Classifier_Sentiment_Model.joblib")
-    vec_path = os.path.join(CACHE_DIR, "c1_BoW_Sentiment_Model.pkl")
+
+    versioned_cache_dir = os.path.join(CACHE_DIR, TRAINED_MODEL_VERSION)
+    os.makedirs(versioned_cache_dir, exist_ok=True)
+
+    model_path = os.path.join(versioned_cache_dir, "Classifier_Sentiment_Model.joblib")
+    vec_path = os.path.join(versioned_cache_dir, "c1_BoW_Sentiment_Model.pkl")
 
     # get model if non existent
     if not os.path.exists(model_path):

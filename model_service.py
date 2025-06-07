@@ -4,6 +4,7 @@ import pickle
 import requests
 import os
 import csv
+from flasgger import Swagger
 
 from libml.text_preprocessing import  preprocess_input
 from libml import __version__ as lib_ml_version
@@ -17,12 +18,13 @@ FEEDBACK_FILE_PATH = os.getenv("FEEDBACK_FILE_PATH","./feedback/feedback_dump.ts
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 app = Flask(__name__)
+swagger = Swagger(app)
 model = None
 new_data = []
 
 def load_model():
     """
-    Loads the model and vectorizer from the specified URLs if they do not exist locally.
+    Method for loading the model and vectorizer from the specified URLs if they do not exist locally.
     """
     global model, cv, new_data
 
@@ -63,20 +65,13 @@ def load_model():
 @app.route('/version', methods=['GET'])
 def version():
     """
-    Get the current version of lib-ml
+    Get library version from lib-ml
     ---
     summary: Get library version
+    parameters: []
     responses:
       200:
         description: Successfully returns version
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                version:
-                  type: string
-                  example: "1.2.3"
     """
     return jsonify({"version": lib_ml_version})
 
@@ -84,14 +79,25 @@ def version():
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    Handles POST requests to the /predict endpoint.
-    This method validates the input JSON payload to ensure it contains the required field:
-    - 'text': A non-empty string representing the text data.
-    If the input is valid, the text is preprocessed and passed to the model for prediction.
-    Otherwise, an appropriate error message is returned.
-    Returns:
-        - 200: If the prediction is successful, with the prediction result.
-        - 400: If the input is invalid, with an error message explaining the issue.
+    Predict sentiment from input text
+    ---
+    summary: Predict sentiment
+    parameters:
+    - in: body
+        name: body
+        required: true
+        schema:
+        type: object
+        required:
+            - text
+        properties:
+            text:
+            type: string
+    responses:
+      200:
+        description: Sentiment prediction result
+      400:
+        description: Invalid input
     """
     data = request.get_json()
     if not data or 'text' not in data:
@@ -109,18 +115,30 @@ def predict():
 @app.route('/new_data', methods=['POST'])
 def new_data_save():
     """
-    Handles POST requests to the /new_data endpoint.
-
-    This method validates the input JSON payload to ensure it contains the required fields:
-    - 'text': A non-empty string representing the text data.
-    - 'sentiment': An integer (0 or 1) representing the sentiment.
-
-    If the input is valid, the data is appended to the global `new_data` list.
-    Otherwise, an appropriate error message is returned.
-
-    Returns:
-        - 200: If the data is successfully added.
-        - 400: If the input is invalid, with an error message explaining the issue.
+    Submit new data for feedback
+    ---
+    summary: Submit new data
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - text
+            - sentiment
+          properties:
+            text:
+              type: string
+            sentiment:
+              type: integer
+    responses:
+      200:
+        description: Data added successfully
+      400:
+        description: Invalid input
+      500:
+        description: Feedback file write error
     """
     data = request.get_json()
     if not data or 'text' not in data or 'sentiment' not in data:
@@ -149,7 +167,7 @@ def new_data_save():
                 writer.writerow(["Review", "Liked"])
             writer.writerow([text.strip(), sentiment])
     except Exception as e:
-        print(f"❌ Error writing to feedback file: {e}")
+        print(f"Error writing to feedback file: {e}")
         return jsonify({"error": f"Failed to write to TSV: {str(e)}"}), 500
 
     return jsonify({"message": "Data added successfully"}), 200

@@ -87,11 +87,11 @@ jobs:
           TIMESTAMP=$(date -u +"%Y%m%d.%H%M")
           
           NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-pre.${TIMESTAMP}"
-          echo "__version__ = \"${NEXT_VERSION}\"" > version.py
+          echo "${NEXT_VERSION}" > version.txt
           echo "next_version=$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Commit and push new pre-release version
         run: |
-          git add version.py
+          git add version.txt
           git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.build-and-publish.outputs.version }}"
           git push origin main

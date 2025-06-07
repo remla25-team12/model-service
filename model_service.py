@@ -23,16 +23,26 @@ swagger = Swagger(app)
 model = None
 new_data = []
 
-def get_git_version():
+def get_version():
     try:
-        # Use git describe to find the latest tag matching the semantic versioning pattern
-        version = subprocess.check_output(
-            ['git', 'describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*.[0-9]*.[0-9]*']
-        ).decode().strip()
-        return version
-    except subprocess.CalledProcessError:
-        # Return a default version if no matching tags are found
-        return "0.0.0"
+        with open("version.txt") as f:
+            version = f.read().strip()
+            # Strip -pre.* if present
+            base_version = version.split('-')[0]
+
+            # Split into MAJOR.MINOR.PATCH
+            parts = base_version.split('.')
+            major = parts[0]
+            minor = parts[1]
+            patch = int(parts[2])
+
+            # If version.txt was pre-release → subtract 1 from PATCH
+            if '-' in version or 'pre' in version:
+                patch = max(0, patch - 1)
+
+            return f"{major}.{minor}.{patch}"
+    except Exception:
+        return "unknown"
     
 def load_model():
     """
@@ -85,7 +95,7 @@ def version():
       200:
         description: Successfully returns version
     """
-    return jsonify({"version": get_git_version()})
+    return jsonify({"version": get_version()})
 
 
 @app.route('/predict', methods=['POST'])

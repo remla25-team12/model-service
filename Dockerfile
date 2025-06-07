@@ -12,6 +12,7 @@ FROM python:3.12.9-slim
 WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY model_service.py .
+COPY version.txt .
 
 # Set default env variables (can be overridden by Kubernetes/Compose)
 ENV MODEL_URL=https://github.com/remla25-team12/model-training/releases/download/v0.1.0/Classifier_Sentiment_Model.joblib

@@ -10,6 +10,8 @@ permissions:
 
 jobs:
   bump-build-release:
+    # Skip bump-build-release if this was an automatic pre-release version bump
+    if: ${{ !contains(github.event.head_commit.message, 'Bump version to') }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.parse-version.outputs.version }}
@@ -139,11 +141,9 @@ jobs:
           NEXT_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}-pre.${TIMESTAMP}"
           echo "Computed next pre-release version: $NEXT_VERSION"
 
-          # OPTIONAL: If version.txt exists, compare and ensure NEXT_VERSION > current version.txt version.
           if [ -f version.txt ]; then
             CURRENT_VERSION=$(cat version.txt)
             echo "Current version.txt: $CURRENT_VERSION"
-            # No strict parsing here — assuming pre-release will always have newer timestamp
           fi
 
           echo "${NEXT_VERSION}" > version.txt

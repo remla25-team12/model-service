@@ -1,20 +1,71 @@
-name: Release model-service
+name: Auto Bump Patch + Release Model Service
 
 on:
   push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
-  build-and-publish:
+  bump-build-release:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.parse-version.outputs.version }}
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up python
+      - name: Configure Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Fetch latest tags and bump patch
+        id: bump-version
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "Latest semantic version tag is: $LATEST_TAG"
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No existing semantic version tag found, starting from v0.0.1"
+            NEW_TAG="v0.0.1"
+          else
+            VERSION=${LATEST_TAG#v}
+            MAJOR=$(echo "$VERSION" | cut -d . -f 1)
+            MINOR=$(echo "$VERSION" | cut -d . -f 2)
+            PATCH=$(echo "$VERSION" | cut -d . -f 3)
+
+            NEW_PATCH=$((PATCH + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+          fi
+
+          echo "Creating new tag: $NEW_TAG"
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"
+
+          echo "version=${NEW_TAG#v}" >> $GITHUB_ENV
+          echo "version=${NEW_TAG#v}" >> $GITHUB_OUTPUT
+
+      - name: Parse version info from tag
+        id: parse-version
+        run: |
+          VERSION=${{ steps.bump-version.outputs.version }}
+          MAJOR=$(echo "$VERSION" | cut -d . -f 1)
+          MINOR=$(echo "$VERSION" | cut -d . -f 2)
+          PATCH=$(echo "$VERSION" | cut -d . -f 3)
+
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_major=$MAJOR" >> $GITHUB_ENV
+          echo "version_minor=$MINOR" >> $GITHUB_ENV
+          echo "version_patch=$PATCH" >> $GITHUB_ENV
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
@@ -27,19 +78,6 @@ jobs:
       - name: Run tests
         run: |
           pytest --maxfail=5 --disable-warnings
-
-      - name: Parse version info from tag
-        id: parse-version
-        run: |
-          VERSION=${GITHUB_REF:11}
-          MAJOR=$(echo "$VERSION" | cut -d . -f 1)
-          MINOR=$(echo "$VERSION" | cut -d . -f 2)
-          PATCH=$(echo "$VERSION" | cut -d . -f 3)
-          echo "version=$VERSION" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_major=$MAJOR" >> $GITHUB_ENV
-          echo "version_minor=$MINOR" >> $GITHUB_ENV
-          echo "version_patch=$PATCH" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         run: docker buildx create --use
@@ -57,12 +95,13 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ env.version }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-  bump-version-on-main:
-    needs: build-and-publish
+  bump-pre-release-version:
+    needs: bump-build-release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -78,14 +117,12 @@ jobs:
 
       - name: Compute next timestamped pre-release version
         run: |
-          VERSION=${{ needs.build-and-publish.outputs.version }}
+          VERSION=${{ needs.bump-build-release.outputs.version }}
           echo "Current released version: $VERSION"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
           PATCH=$((PATCH + 1))
-          
-          # Generate timestamp suffix to support multiple versions of the same pre-release
+
           TIMESTAMP=$(date -u +"%Y%m%d.%H%M")
-          
           NEXT_VERSION="${MAJOR}.${MINOR}.${PATCH}-pre.${TIMESTAMP}"
           echo "${NEXT_VERSION}" > version.txt
           echo "next_version=$NEXT_VERSION" >> $GITHUB_ENV
@@ -93,5 +130,5 @@ jobs:
       - name: Commit and push new pre-release version
         run: |
           git add version.txt
-          git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.build-and-publish.outputs.version }}"
+          git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.bump-build-release.outputs.version }}"
           git push origin main

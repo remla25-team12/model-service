@@ -7,6 +7,7 @@ import csv
 
 from libml.text_preprocessing import  preprocess_input
 from libml import __version__ as lib_ml_version
+import subprocess
 
 CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./cache")
 TRAINED_MODEL_VERSION = os.getenv("TRAINED_MODEL_VERSION", "v0.1.0")
@@ -20,6 +21,17 @@ app = Flask(__name__)
 model = None
 new_data = []
 
+def get_git_version():
+    try:
+        # Use git describe to find the latest tag matching the semantic versioning pattern
+        version = subprocess.check_output(
+            ['git', 'describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*.[0-9]*.[0-9]*']
+        ).decode().strip()
+        return version
+    except subprocess.CalledProcessError:
+        # Return a default version if no matching tags are found
+        return "0.0.0"
+    
 def load_model():
     """
     Loads the model and vectorizer from the specified URLs if they do not exist locally.
@@ -78,7 +90,7 @@ def version():
                   type: string
                   example: "1.2.3"
     """
-    return jsonify({"version": lib_ml_version})
+    return jsonify({"version": get_git_version()})
 
 
 @app.route('/predict', methods=['POST'])

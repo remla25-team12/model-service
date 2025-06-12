@@ -126,6 +126,7 @@ jobs:
           echo "LATEST_TAG=${LATEST_TAG}" >> $GITHUB_OUTPUT
 
       - name: Compute next timestamped pre-release version
+        id: compute-pre-release 
         run: |
           LATEST_TAG=${{ steps.latest-tag.outputs.LATEST_TAG }}
           echo "Latest release tag is $LATEST_TAG"
@@ -146,11 +147,13 @@ jobs:
             echo "Current version.txt: $CURRENT_VERSION"
           fi
 
-          echo "${NEXT_VERSION}" > version.txt
+          echo "$NEXT_VERSION" > version.txt
+          git add version.txt
           echo "next_version=$NEXT_VERSION" >> $GITHUB_ENV
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit and push new pre-release version
         run: |
-          git add version.txt
-          git commit -m "Bump version to ${{ env.next_version }} after release ${{ needs.bump-build-release.outputs.version }}"
+          git commit -m "Bump version to ${{ steps.compute-pre-release.outputs.next_version }} after release ${{ needs.bump-build-release.outputs.version }}" || echo "Nothing to commit"
           git push origin main
+
